@@ -15,7 +15,22 @@ export default () => {
     const [description, setDescription] = useState('');
     const [active, setActive] = useState(true);
     const redirect = useNavigate();
-    const { login } = useContext(Context);
+    const { login, logout, setLogin } = useContext(Context);
+
+
+    useEffect(() => {
+        if (document.cookie.includes('token')) {
+            fetch(API_URL + '/refresh', { credentials: "include" })
+                .then(e => e.json())
+                .then(data => {
+                    if (data.error) {
+                        logout();
+                    } else {
+                        setLogin(data)
+                    }
+                })
+        }
+    }, [])
 
     useEffect(() => {
         if (!login) {

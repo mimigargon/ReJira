@@ -85,13 +85,62 @@ router.post('/task/project/:idProject', checkToken, async (req, res, next) => {
 
 router.get('/task', async (req, res) => await readItems(req, res, Task));
 router.get('/task/:id', async (req, res) => await readItem(req, res, Task));
-router.put('/task/:id', async (req, res) => await updateItem(req, res, Task));
+router.get('/task/project/:idProject', async (req, res) => {
+    try {
+        const project = await Project.findByPk(req.params.idProject);
+
+        req.body.idProject = req.idProject;
+
+        if (!project) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+
+        const tasks = await project.getTasks();
+        res.json(tasks);
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.patch('/task/:idTask', async (req, res) => {
+    try {
+        const existingTask = await Task.findByPk(req.params.idTask);
+
+        if (!existingTask) {
+            return res.status(400).json({ error: 'Task not found' });
+        }
+
+        if (req.body.name) {
+            existingTask.name = req.body.name;
+        }
+        if (req.body.description) {
+            existingTask.description = req.body.description;
+        }
+        if (req.body.priority) {
+            existingTask.priority = req.body.priority;
+        }
+        if (req.body.state) {
+            existingTask.state = req.body.state;
+        }
+        if (req.body.task_type) {
+            existingTask.task_type = req.body.task_type;
+        }
+
+        await existingTask.save();
+
+        return res.status(200).json({ message: 'Task updated' });
+    } catch (error) {
+        return res.status(500).json({ error: `Error updating task ${idTask}` });
+    }
+});
+
 router.delete('/task/:id', async (req, res) => await updateItem(req, res, Task));
 
 
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
-
+    console.log('login')
     try {
         const user = await User.findOne({ where: { email } });
         if (!user) {
@@ -108,6 +157,14 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+router.get('/refresh', checkToken, async (req, res) => {
+    const user = await User.findByPk(req.userId);
+    if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+    return res.json({ id: user.id, name: user.name })
+})
 
 router.post('/register', async (req, res) => {
     try {

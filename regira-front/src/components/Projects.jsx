@@ -12,14 +12,29 @@ export default () => {
     const [projects, setProjects] = useState([]);
     const [error, setError] = useState('');
     const redirect = useNavigate();
-    const { login } = useContext(Context);
+    const { login, logout, setLogin } = useContext(Context);
 
+
+    useEffect(() => {
+        if (document.cookie.includes('token')) {
+            fetch(API_URL + '/refresh', { credentials: "include" })
+                .then(e => e.json())
+                .then(data => {
+                    if (data.error) {
+                        logout();
+                    } else {
+                        setLogin(data)
+                    }
+                })
+        }
+    }, [])
 
     useEffect(() => {
         if (!login) {
             redirect('/login')
         }
     }, [login])
+
 
     useEffect(() => {
         const options = {
