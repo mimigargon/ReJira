@@ -56,7 +56,7 @@ router.get('/project/:id', async (req, res) => await readItem(req, res, Project)
 router.put('/project/:id', async (req, res) => await updateItem(req, res, Project));
 router.delete('/project/:id', async (req, res) => await deleteItem(req, res, Project));
 
-router.post('/task/project/:idProject', checkToken, async (req, res, next) => {
+router.post('/task/project/:projectId', checkToken, async (req, res, next) => {
     try {
         const user = await User.findByPk(req.userId);
         if (!user) {
@@ -64,7 +64,7 @@ router.post('/task/project/:idProject', checkToken, async (req, res, next) => {
         }
 
         req.body.userId = req.userId;
-        req.body.projectId = req.params.idProject;
+        req.body.projectId = req.params.projectId;
 
         upload(req, res, async function (err) {
             if (err) {
@@ -78,6 +78,18 @@ router.post('/task/project/:idProject', checkToken, async (req, res, next) => {
             const item = await user.createTask(req.body);
             res.status(201).json(item);
         });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/project/:projectId/task', checkToken, async (req, res) => {
+    try {
+        const project = await Project.findByPk(req.params.projectId, { include: Task });
+        if (!project) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+        res.json(project);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -103,7 +115,7 @@ router.get('/task/project/:idProject', async (req, res) => {
     }
 });
 
-router.patch('/task/:idTask', async (req, res) => {
+router.put('/task/:idTask', async (req, res) => {
     try {
         const existingTask = await Task.findByPk(req.params.idTask);
 

@@ -26,6 +26,7 @@ function App() {
             logout();
           } else {
             setLogin(data)
+            redirect('/project');
           }
         })
     }
@@ -34,6 +35,8 @@ function App() {
   useEffect(() => {
     if (!login) {
       redirect('/login')
+    } else {
+      redirect('/project');
     }
   }, [login])
 
